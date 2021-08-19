@@ -5,11 +5,11 @@ from tortoise.contrib.pydantic import pydantic_model_creator
 class Todo(models.Model):
     
     id = fields.IntField(pk=True)
-    todo = fields.CharField(max_lenght=250)
-    la_date = fields.CharField(max_lenght=250)
+    todo = fields.CharField(max_length=250)
+    la_date = fields.CharField(max_length=250)
     
     class PydanticMeta:
         pass
     
-TodoOut_Pydantic = pydantic_model_creator(Todo, name="TodoOut")
+Todo_Pydantic = pydantic_model_creator(Todo, name="Todo")
 TodoIn_Pydantic = pydantic_model_creator(Todo, name="TodoIn", exclude_readonly=True)

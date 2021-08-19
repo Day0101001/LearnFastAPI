@@ -1,6 +1,8 @@
-from fastapi import FastAPI, Form
-from typing import Optional
+from fastapi import FastAPI, Form, Query, File, UploadFile
+from typing import Optional, List
 from pydantic import BaseModel
+from enum import Enum
+import os
 
 app = FastAPI()
 
@@ -38,4 +40,35 @@ async def login(user:str=Form(...), password:str=Form(...)):
 # async def read_component(number:int, text:Optional[str]):
 #     return {"number" : number, "text" : text}
 
+@app.get("/items/")
+async def read_items(q: List[str] = Query(["foo", "bar"])):
+    query_items = {"q": q}
+    return query_items
+
+class ModelName(str, Enum):
+    alexnet = "alexnet"
+    resnet = "resnet"
+    lenet = "lenet"
+
+
+@app.get("/models/{model_name}")
+async def get_model(model_name: ModelName):
+    if model_name == ModelName.alexnet:
+        return {"model_name": model_name, "message": "Deep Learning FTW!"}
+
+    if model_name.value == "lenet":
+        return {"model_name": model_name, "message": "LeCNN all the images"}
+
+    return {"model_name": model_name, "message": "Have some residuals"}
+
+
+@app.post("/files/")
+async def create_file(file: bytes = File(...)):
+    return {"file_size": len(file)}
+
+
+@app.post("/uploadfile/")
+async def create_upload_file(file: UploadFile = File(...)):
+    os.mkdir('livres')
     
+    return {"filename": file.filename}

@@ -1,37 +1,26 @@
-from fastapi import FastAPI
-from typing import Optional
+from fastapi import FastAPI, HTTPException 
+from models import Todo, TodoIn_Pydantic, Todo_Pydantic
+from tortoise.contrib.fastapi import HTTPNotFoundError, register_tortoise
 from pydantic import BaseModel
 
+class Message(BaseModel):
+    message: str
+    
 app = FastAPI()
 
-class CoordIn(BaseModel):
-    password :str
-    lat : float
-    lon : float
-    zoom : Optional[int]=None
-    description : Optional[str]
+@app.post("/todo", response_model=Todo_Pydantic)
+async def create(todo:TodoIn_Pydantic):
+    obj = await Todo.create(**todo.dict(exclude_unset=True))
+    return await Todo.Todo_Pydantic
 
-class CoordOut(BaseModel):
-    lat : float
-    lon : float
-    zoom : Optional[int]=None
-    description : Optional[str]
+@app.get("/gettodo/{id}", response_model=TodoIn_Pydantic, responses={404:{"model":HTTPNotFoundError}})
+async def get_one(id: int):
+    return await TodoIn_Pydantic.from_queryset_single(Todo.get(id=id))
 
-@app.post("/position/", response_model=CoordOut, response_model_exclude={"description"} )
-async def make_position(coord: CoordIn):
-    return {"New_Coord": coord.dict()}
-
-
-@app.get("/")
-async def read_root():
-    return {"Hello": "World"}
-
-# @app.get("/component/{component_id}")
-# async def get_component(component_id:int):
-#     return {"component" : component_id} 
-
-# @app.get("/component/")
-# async def read_component(number:int, text:Optional[str]):
-#     return {"number" : number, "text" : text}
-
-    
+register_tortoise(
+    app, 
+    db_url="sqlite://store.db",
+    modules={'models':['models']},
+    generate_schemas=True,
+    add_exception_handlers=True
+    )
